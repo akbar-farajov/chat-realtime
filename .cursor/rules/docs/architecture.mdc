@@ -1,0 +1,62 @@
+---
+alwaysApply: true
+---
+
+
+# Application Architecture: Realtime Chat (WhatsApp Clone)
+
+## Database Schema (Supabase)
+
+### Tables
+1. **profiles**
+   - `id` (uuid, PK, references auth.users)
+   - `username` (text)
+   - `avatar_url` (text)
+   - `status` (text) - 'online' | 'offline'
+
+2. **conversations**
+   - `id` (uuid, PK)
+   - `created_at` (timestamp)
+   - `is_group` (boolean)
+   - `name` (text, nullable)
+   - `group_image` (text, nullable)
+
+3. **conversation_members**
+   - `id` (uuid, PK)
+   - `conversation_id` (FK -> conversations)
+   - `user_id` (FK -> profiles)
+   - `role` (text) - 'admin' | 'member'
+
+4. **messages**
+   - `id` (uuid, PK)
+   - `conversation_id` (FK -> conversations)
+   - `sender_id` (FK -> profiles)
+   - `content` (text)
+   - `type` (text) - 'text' | 'image' | 'video' | 'audio'
+   - `created_at` (timestamp)
+
+## Key Features Logic
+
+### 1. Authentication & Middleware
+- Use Supabase Auth with Google Provider.
+- Middleware must protect `/` and `/conversations` routes.
+- Redirect unauthenticated users to `/login`.
+
+### 2. Sidebar (Server Component)
+- Fetch user's conversations from `conversations` table via `conversation_members`.
+- If `is_group` is false, fetch the *other* user's details (name, avatar) to display.
+- Sort by `last_message_at` (needs to be handled in query or derived).
+
+### 3. Chat Area (Client + Server)
+- **Header:** Shows user/group info.
+- **Message List:** - Initial load via Server Component.
+  - Listen to real-time updates using `supabase.channel`.
+  - On `INSERT` event to `messages` table, append new message to state.
+- **Input:** - Uses Server Action `sendMessage(formData)`.
+  - Optimistic UI updates are preferred but optional for MVP.
+
+### 4. Direct Message Logic
+- When starting a chat with User B:
+- Check if a conversation with `is_group: false` exists containing both CurrentUser and UserB.
+- If yes -> Redirect to that `conversationId`.
+- If no -> Create new conversation -> Add members -> Redirect.

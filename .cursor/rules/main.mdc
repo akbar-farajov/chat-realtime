@@ -1,0 +1,35 @@
+---
+alwaysApply: true
+---
+# Project Rules & Technology Stack
+
+## Tech Stack
+- **Framework:** Next.js 16 (App Router)
+- **Styling:** Tailwind CSS v4 (CSS-first configuration)
+- **UI Library:** shadcn/ui
+- **Backend/DB:** Supabase (PostgreSQL, Auth, Realtime)
+- **State Management:** React Context (only when absolutely necessary), otherwise URL state or Server State
+- **Formatter/Linter:** Biome (NOT Prettier/ESLint)
+- **Language:** TypeScript
+
+## Coding Standards
+1. **Minimalism:** Write the smallest amount of code possible to achieve the feature.
+2. **Readability:** Use descriptive variable and function names.
+3. **No Comments:** Do not write comments in the code unless logic is extremely obscure. Code should be self-documenting.
+4. **Functional:** Use React Functional Components and Hooks.
+5. **Server Components:** Default to Server Components. Use 'use client' only for interactive parts.
+6. **Server Actions:** Use Next.js Server Actions for data mutations (POST, PUT, DELETE). Do not use API routes unless necessary for external webhooks.
+7. **Supabase Types:** Always use generated Database types from Supabase.
+8. **Biome:** Ensure code is formatted according to Biome standards (no unused imports, sorted imports).
+
+## Tailwind v4 Specifics
+- Do not look for `tailwind.config.js`. Configuration is done via CSS variables in `globals.css`.
+- Use generic HTML tags with Tailwind classes instead of creating styled components wrappers.
+
+## Project Structure
+- `app/` - Next.js App Router pages and layouts.
+- `components/` - Reusable UI components.
+- `lib/supabase/` - Supabase clients (server, client, middleware).
+- `actions/` - Server actions for mutations.
+- `hooks/` - Custom React hooks.
+- `types/` - TypeScript interfaces and Supabase generated types.
