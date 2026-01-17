@@ -1,7 +1,7 @@
 import Link from "next/link";
 
+import type { ConversationListItem } from "@/actions/conversations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import type { ConversationListItem } from "@/lib/data";
 import { cn } from "@/lib/utils";
 
 type ConversationItemProps = {

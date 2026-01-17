@@ -1,5 +1,5 @@
+import { getConversations } from "@/actions/conversations";
 import { ConversationItem } from "@/components/sidebar/conversationI-item";
-import { getConversations } from "@/lib/data";
 
 type ConversationListProps = {
   userId: string;
