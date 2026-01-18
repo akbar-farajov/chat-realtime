@@ -57,7 +57,7 @@ export function LoginForm({
                 </div>
                 <Input id="password" name="password" type="password" required />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-sm text-destructive">{error}</p>}
               <SubmitButton pendingText="Logging in...">Login</SubmitButton>
             </div>
           </form>

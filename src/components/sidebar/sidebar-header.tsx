@@ -18,7 +18,7 @@ const getInitials = (value: string) =>
 
 export function SidebarHeader({ userName, userAvatarUrl }: SidebarHeaderProps) {
   return (
-    <div className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3">
+    <div className="flex items-center justify-between border-b border-sidebar-border bg-sidebar px-4 py-3">
       <Avatar className="size-10">
         <AvatarImage src={userAvatarUrl ?? undefined} alt={userName} />
         <AvatarFallback>{getInitials(userName)}</AvatarFallback>

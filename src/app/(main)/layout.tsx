@@ -38,15 +38,15 @@ export default async function MainLayout({
     null;
 
   return (
-    <div className="flex h-svh w-full bg-zinc-100">
-      <aside className="hidden h-svh w-80 flex-col border-r border-zinc-200 bg-white md:flex">
+    <div className="flex h-svh w-full">
+      <aside className="hidden h-svh w-80 flex-col border-r bg-sidebar md:flex">
         <Sidebar
           userId={user.id}
           userName={userName}
           userAvatarUrl={userAvatarUrl}
         />
       </aside>
-      <main className="flex min-w-0 flex-1 flex-col bg-zinc-100">
+      <main className="flex min-w-0 flex-1 flex-col bg-background">
         {children}
       </main>
     </div>

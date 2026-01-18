@@ -41,7 +41,7 @@ export function ConversationItem({
       aria-current={selected ? "page" : undefined}
       className={cn(
         "flex gap-3 px-4 py-3 transition-colors",
-        selected ? "bg-zinc-200" : "hover:bg-zinc-100",
+        selected ? "bg-sidebar-accent" : "hover:bg-sidebar-accent",
       )}
     >
       <Avatar className="size-12">
@@ -50,12 +50,10 @@ export function ConversationItem({
       </Avatar>
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
-          <div className="truncate text-sm font-medium text-zinc-900">
-            {data.name}
-          </div>
-          <div className="text-xs text-zinc-500">{timeLabel}</div>
+          <div className="truncate text-sm font-medium">{data.name}</div>
+          <div className="text-xs">{timeLabel}</div>
         </div>
-        <div className="truncate text-sm text-zinc-500">{lastMessageText}</div>
+        <div className="truncate text-sm">{lastMessageText}</div>
       </div>
     </Link>
   );

@@ -14,7 +14,7 @@ export async function ConversationList({
 
   if (conversations.length === 0) {
     return (
-      <div className="flex flex-1 items-center justify-center px-4 text-sm text-zinc-500">
+      <div className="flex flex-1 items-center justify-center px-4 text-sm">
         No conversations yet
       </div>
     );
