@@ -1,35 +1,31 @@
 "use server";
 
+import { createSafeAction } from "@/lib/safe-action";
 import { createClient } from "@/lib/supabase/server";
 import { mapConversationRows } from "./helpers";
 import type { ConversationListItem, ConversationQueryRow } from "./types";
 
-export async function getConversations(
-  userId: string,
-): Promise<ConversationListItem[]> {
-  const supabase = await createClient();
+export const getConversations = createSafeAction(
+  async (userId: string): Promise<ConversationListItem[]> => {
+    const supabase = await createClient();
 
-  const { data: memberRows, error: memberError } = await supabase
-    .from("conversation_members")
-    .select("conversation_id")
-    .eq("user_id", userId);
+    const { data: memberRows, error: memberError } = await supabase
+      .from("conversation_members")
+      .select("conversation_id")
+      .eq("user_id", userId);
 
-  if (memberError) {
-    return [];
-  }
+    if (memberError) throw new Error(memberError.message);
 
-  const conversationIds = (memberRows ?? [])
-    .map((row) => row.conversation_id)
-    .filter((id): id is string => Boolean(id));
+    const conversationIds = (memberRows ?? [])
+      .map((row) => row.conversation_id)
+      .filter((id): id is string => Boolean(id));
 
-  if (conversationIds.length === 0) {
-    return [];
-  }
+    if (conversationIds.length === 0) return [];
 
-  const { data, error } = await supabase
-    .from("conversations")
-    .select(
-      `
+    const { data, error } = await supabase
+      .from("conversations")
+      .select(
+        `
         id,
         is_group,
         name,
@@ -49,20 +45,18 @@ export async function getConversations(
           created_at
         )
       `,
-    )
-    .in("id", conversationIds)
-    .order("last_message_at", { ascending: false })
-    .order("created_at", { referencedTable: "messages", ascending: false })
-    .limit(1, { referencedTable: "messages" });
+      )
+      .in("id", conversationIds)
+      .order("last_message_at", { ascending: false })
+      .order("created_at", { referencedTable: "messages", ascending: false })
+      .limit(1, { referencedTable: "messages" });
 
-  if (error) {
-    return [];
-  }
+    if (error) throw new Error(error.message);
 
-  const conversations = (data ?? []) as unknown as ConversationQueryRow[];
-
-  return mapConversationRows(conversations, userId);
-}
+    const conversations = (data ?? []) as unknown as ConversationQueryRow[];
+    return mapConversationRows(conversations, userId);
+  },
+);
 
 export async function getDirectConversation(
   userId: string,
@@ -96,69 +90,67 @@ interface CreateConversationParams {
   memberIds: string[];
   isGroup?: boolean;
   name?: string;
+  creatorId: string;
 }
 
-export async function createConversation({
-  memberIds,
-  isGroup = false,
-  name,
-  creatorId,
-}: CreateConversationParams & { creatorId: string }): Promise<
-  { id: string } | { error: string }
-> {
-  const supabase = await createClient();
+export const createConversation = createSafeAction(
+  async ({
+    memberIds,
+    isGroup = false,
+    name,
+    creatorId,
+  }: CreateConversationParams): Promise<{ id: string }> => {
+    const supabase = await createClient();
 
-  const conversationId = crypto.randomUUID();
+    const conversationId = crypto.randomUUID();
 
-  const { error: conversationError } = await supabase
-    .from("conversations")
-    .insert({ id: conversationId, is_group: isGroup, name });
+    const { error: conversationError } = await supabase
+      .from("conversations")
+      .insert({ id: conversationId, is_group: isGroup, name });
 
-  if (conversationError) {
-    return { error: conversationError.message };
-  }
+    if (conversationError) throw new Error(conversationError.message);
 
-  const { error: creatorError } = await supabase
-    .from("conversation_members")
-    .insert({ conversation_id: conversationId, user_id: creatorId });
-
-  if (creatorError) {
-    await supabase.from("conversations").delete().eq("id", conversationId);
-    return { error: creatorError.message };
-  }
-
-  const otherMembers = memberIds
-    .filter((id) => id !== creatorId)
-    .map((userId) => ({ conversation_id: conversationId, user_id: userId }));
-
-  if (otherMembers.length > 0) {
-    const { error: membersError } = await supabase
+    const { error: creatorError } = await supabase
       .from("conversation_members")
-      .insert(otherMembers);
+      .insert({ conversation_id: conversationId, user_id: creatorId });
 
-    if (membersError) {
+    if (creatorError) {
       await supabase.from("conversations").delete().eq("id", conversationId);
-      return { error: membersError.message };
+      throw new Error(creatorError.message);
     }
-  }
 
-  return { id: conversationId };
-}
+    const otherMembers = memberIds
+      .filter((id) => id !== creatorId)
+      .map((userId) => ({ conversation_id: conversationId, user_id: userId }));
 
-export async function getExistingConversationId(
-  otherUserId: string,
-): Promise<{ id: string | null } | { error: string }> {
-  const supabase = await createClient();
+    if (otherMembers.length > 0) {
+      const { error: membersError } = await supabase
+        .from("conversation_members")
+        .insert(otherMembers);
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+      if (membersError) {
+        await supabase.from("conversations").delete().eq("id", conversationId);
+        throw new Error(membersError.message);
+      }
+    }
 
-  if (!user) return { error: "Unauthorized" };
-  if (user.id === otherUserId) {
-    return { error: "Cannot start a conversation with yourself" };
-  }
+    return { id: conversationId };
+  },
+);
 
-  const existingId = await getDirectConversation(user.id, otherUserId);
-  return { id: existingId };
-}
+export const getExistingConversationId = createSafeAction(
+  async (otherUserId: string): Promise<string | null> => {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+    if (user.id === otherUserId) {
+      throw new Error("Cannot start a conversation with yourself");
+    }
+
+    return getDirectConversation(user.id, otherUserId);
+  },
+);

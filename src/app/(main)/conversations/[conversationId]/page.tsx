@@ -32,8 +32,8 @@ export default async function ConversationPage({
       redirect("/");
     }
 
-    const targetProfile = await getProfile(targetUserId);
-    if (!targetProfile) {
+    const profileResult = await getProfile(targetUserId);
+    if (!profileResult.success || !profileResult.data) {
       notFound();
     }
 
@@ -41,7 +41,7 @@ export default async function ConversationPage({
       <ChatArea
         isNew
         targetUserId={targetUserId}
-        targetProfile={targetProfile}
+        targetProfile={profileResult.data}
         currentUserId={user.id}
       />
     );

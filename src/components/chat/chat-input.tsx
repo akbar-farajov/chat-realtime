@@ -36,13 +36,13 @@ export function ChatInput({
         content,
       });
 
-      if (result.success) {
+      if (result.success && result.data) {
         if (inputRef.current) {
           inputRef.current.value = "";
         }
 
-        if (isNew && result.conversationId) {
-          router.replace(`/conversations/${result.conversationId}`);
+        if (isNew) {
+          router.replace(`/conversations/${result.data.conversationId}`);
         }
       }
     });

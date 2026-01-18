@@ -17,8 +17,6 @@ export interface SendMessageParams {
 }
 
 export interface SendMessageResult {
-  success: boolean;
-  conversationId?: string;
-  messageId?: string;
-  error?: string;
+  conversationId: string;
+  messageId: string;
 }

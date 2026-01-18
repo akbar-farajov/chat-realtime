@@ -10,7 +10,8 @@ export async function ConversationList({
   userId,
   activeConversationId,
 }: ConversationListProps) {
-  const conversations = await getConversations(userId);
+  const result = await getConversations(userId);
+  const conversations = result.data ?? [];
 
   if (conversations.length === 0) {
     return (

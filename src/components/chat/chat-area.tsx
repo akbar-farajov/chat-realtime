@@ -30,7 +30,10 @@ export async function ChatArea({
   targetUserId,
   targetProfile,
 }: ChatAreaProps) {
-  const messages = conversationId ? await getMessages(conversationId) : [];
+  const messagesResult = conversationId
+    ? await getMessages(conversationId)
+    : null;
+  const messages = messagesResult?.data ?? [];
 
   const profile = isNew ? targetProfile : chatPartner;
   const isGroup = conversation?.is_group ?? false;

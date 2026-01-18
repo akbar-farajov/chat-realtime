@@ -77,7 +77,7 @@ export function NewChatModal() {
 
     setIsSearching(true);
     searchUsers(debouncedQuery)
-      .then(setUsers)
+      .then((result) => setUsers(result.data ?? []))
       .finally(() => setIsSearching(false));
   }, [debouncedQuery]);
 
@@ -85,7 +85,7 @@ export function NewChatModal() {
     startTransition(async () => {
       const result = await getExistingConversationId(userId);
 
-      if ("error" in result) {
+      if (!result.success) {
         return;
       }
 
@@ -93,8 +93,8 @@ export function NewChatModal() {
       setQuery("");
       setUsers([]);
 
-      if (result.id) {
-        router.push(`/conversations/${result.id}`);
+      if (result.data) {
+        router.push(`/conversations/${result.data}`);
       } else {
         router.push(`/conversations/new?userId=${userId}`);
       }
