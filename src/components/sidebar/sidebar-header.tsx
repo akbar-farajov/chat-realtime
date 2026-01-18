@@ -1,5 +1,5 @@
-import { MessageSquarePlus, Settings } from "lucide-react";
-
+import { LogOut, MessageSquarePlus } from "lucide-react";
+import { logOut } from "@/actions/auth/auth";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
@@ -27,9 +27,11 @@ export function SidebarHeader({ userName, userAvatarUrl }: SidebarHeaderProps) {
         <Button variant="ghost" size="icon-sm" aria-label="New chat">
           <MessageSquarePlus className="size-4" />
         </Button>
-        <Button variant="ghost" size="icon-sm" aria-label="Settings">
-          <Settings className="size-4" />
-        </Button>
+        <form action={logOut}>
+          <Button variant="ghost" size="icon-sm" aria-label="Settings">
+            <LogOut className="size-4" />
+          </Button>
+        </form>
       </div>
     </div>
   );
