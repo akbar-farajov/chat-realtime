@@ -1,13 +1,11 @@
 "use client";
 
-import { Send } from "lucide-react";
+import { Paperclip, Send } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useRef, useState, useTransition } from "react";
 
 import type { Message } from "@/actions/messages";
 import { sendMessage } from "@/actions/messages";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
 import { useRealtimeBroadcast } from "@/hooks/use-realtime-subscription";
 import { createClient } from "@/lib/supabase/client";
@@ -128,9 +126,12 @@ export function ChatClient({
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [inputValue, setInputValue] = useState("");
   const [currentConversationId, setCurrentConversationId] =
     useState(conversationId);
   const { containerRef } = useChatScroll(messages);
+
+  const canSend = inputValue.trim().length > 0 && !isPending;
 
   const handleNewMessage = useCallback(
     (message: Message) => {
@@ -153,8 +154,10 @@ export function ChatClient({
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const content = inputRef.current?.value.trim();
+    const content = inputValue.trim();
     if (!content) return;
+
+    setInputValue("");
 
     const createdAt = new Date().toISOString();
 
@@ -170,7 +173,6 @@ export function ChatClient({
     };
 
     setMessages((prev) => [...prev, optimisticMessage]);
-    if (inputRef.current) inputRef.current.value = "";
 
     startTransition(async () => {
       const result = await sendMessage({
@@ -245,25 +247,33 @@ export function ChatClient({
           </div>
         </div>
       )}
-      <form
-        onSubmit={handleSubmit}
-        className="flex items-center gap-2 border-t px-4 py-3"
-      >
-        <Input
-          ref={inputRef}
-          placeholder="Type a message..."
-          disabled={isPending}
-          className="flex-1"
-          autoComplete="off"
-        />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={isPending}
-          aria-label="Send message"
-        >
-          <Send className="size-4" />
-        </Button>
+      <form onSubmit={handleSubmit} className="px-4 py-3">
+        <div className="flex h-12 items-center gap-2 rounded-full bg-input px-1">
+          <button
+            type="button"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full text-muted-foreground transition-colors hover:text-foreground"
+            aria-label="Attach file"
+          >
+            <Paperclip className="size-5" />
+          </button>
+          <input
+            ref={inputRef}
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            placeholder="Type a message..."
+            disabled={isPending}
+            className="h-full flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            autoComplete="off"
+          />
+          <button
+            type="submit"
+            disabled={!canSend}
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+            aria-label="Send message"
+          >
+            <Send className="size-5" />
+          </button>
+        </div>
       </form>
     </>
   );
