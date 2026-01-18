@@ -1,4 +1,3 @@
 export { ChatArea } from "./chat-area";
-export { ChatBody } from "./chat-body";
+export { ChatClient } from "./chat-client";
 export { ChatHeader } from "./chat-header";
-export { ChatInput } from "./chat-input";

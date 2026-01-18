@@ -154,3 +154,54 @@ export const getExistingConversationId = createSafeAction(
     return getDirectConversation(user.id, otherUserId);
   },
 );
+
+export const getConversationById = createSafeAction(
+  async (conversationId: string): Promise<ConversationListItem | null> => {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const { data, error } = await supabase
+      .from("conversations")
+      .select(
+        `
+        id,
+        is_group,
+        name,
+        group_image,
+        last_message_at,
+        conversation_members (
+          user_id,
+          profiles (
+            id,
+            username,
+            full_name,
+            avatar_url
+          )
+        ),
+        messages (
+          content,
+          created_at
+        )
+      `,
+      )
+      .eq("id", conversationId)
+      .order("created_at", { referencedTable: "messages", ascending: false })
+      .limit(1, { referencedTable: "messages" })
+      .maybeSingle();
+
+    if (error) throw new Error(error.message);
+    if (!data) return null;
+
+    const conversations = mapConversationRows(
+      [data] as unknown as ConversationQueryRow[],
+      user.id,
+    );
+
+    return conversations[0] ?? null;
+  },
+);

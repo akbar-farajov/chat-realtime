@@ -1,8 +1,7 @@
 import { getMessages } from "@/actions/messages";
 import type { UserProfile } from "@/actions/users";
-import { ChatBody } from "./chat-body";
+import { ChatClient } from "./chat-client";
 import { ChatHeader } from "./chat-header";
-import { ChatInput } from "./chat-input";
 
 interface ConversationData {
   id: string;
@@ -46,13 +45,10 @@ export async function ChatArea({
         groupName={conversation?.name}
         groupImage={conversation?.group_image}
       />
-      <ChatBody
+      <ChatClient
         initialMessages={initialMessages}
         conversationId={conversationId}
         currentUserId={currentUserId}
-      />
-      <ChatInput
-        conversationId={conversationId}
         targetUserId={targetUserId}
         isNew={isNew}
       />
