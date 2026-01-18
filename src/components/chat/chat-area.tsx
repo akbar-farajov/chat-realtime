@@ -33,7 +33,7 @@ export async function ChatArea({
   const messagesResult = conversationId
     ? await getMessages(conversationId)
     : null;
-  const messages = messagesResult?.data ?? [];
+  const initialMessages = messagesResult?.data ?? [];
 
   const profile = isNew ? targetProfile : chatPartner;
   const isGroup = conversation?.is_group ?? false;
@@ -46,7 +46,11 @@ export async function ChatArea({
         groupName={conversation?.name}
         groupImage={conversation?.group_image}
       />
-      <ChatBody messages={messages} currentUserId={currentUserId} />
+      <ChatBody
+        initialMessages={initialMessages}
+        conversationId={conversationId}
+        currentUserId={currentUserId}
+      />
       <ChatInput
         conversationId={conversationId}
         targetUserId={targetUserId}

@@ -36,6 +36,10 @@ create table public.messages (
   is_edited boolean default false
 );
 
+ALTER PUBLICATION supabase_realtime ADD TABLE public.conversations;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.conversation_members;
+ALTER PUBLICATION supabase_realtime ADD TABLE public.messages;
+
 create index idx_conversation_members_user_id on public.conversation_members (user_id);
 create index idx_conversation_members_conversation_id on public.conversation_members (conversation_id);
 create index idx_messages_conversation_id on public.messages (conversation_id);

@@ -1,10 +1,10 @@
 import { getConversations } from "@/actions/conversations";
-import { ConversationItem } from "@/components/sidebar/conversationI-item";
+import { ConversationListClient } from "@/components/sidebar/conversation-list-client";
 
-type ConversationListProps = {
+interface ConversationListProps {
   userId: string;
   activeConversationId?: string;
-};
+}
 
 export async function ConversationList({
   userId,
@@ -13,26 +13,11 @@ export async function ConversationList({
   const result = await getConversations(userId);
   const conversations = result.data ?? [];
 
-  if (conversations.length === 0) {
-    return (
-      <div className="flex flex-1 items-center justify-center px-4 text-sm">
-        No conversations yet
-      </div>
-    );
-  }
-
   return (
-    <div className="flex-1 overflow-y-auto">
-      <ul className="flex flex-col">
-        {conversations.map((conversation) => (
-          <li key={conversation.id}>
-            <ConversationItem
-              data={conversation}
-              selected={conversation.id === activeConversationId}
-            />
-          </li>
-        ))}
-      </ul>
-    </div>
+    <ConversationListClient
+      initialConversations={conversations}
+      userId={userId}
+      activeConversationId={activeConversationId}
+    />
   );
 }
