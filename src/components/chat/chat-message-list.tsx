@@ -62,7 +62,7 @@ export function ChatMessageList({
   let lastDate = "";
 
   return (
-    <div ref={containerRef} className="flex-1 overflow-y-auto p-4">
+    <div ref={containerRef} className="flex-1 overflow-y-auto py-4 px-12">
       <div className="flex flex-col gap-2">
         {messages.map((message) => {
           const messageDate = getDateLabel(message.createdAt);

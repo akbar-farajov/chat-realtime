@@ -44,7 +44,7 @@ function ImageMessage({
         <Image
           src={message.fileUrl}
           alt="Attachment"
-          width={300}
+          width={200}
           height={200}
           unoptimized
           className="h-auto max-w-full rounded-t-lg object-cover"
