@@ -41,6 +41,7 @@ export const sendMessage = createSafeAction(
     targetUserId,
     content,
     type = "text",
+    fileUrl,
   }: SendMessageParams): Promise<SendMessageResult> => {
     const supabase = await createClient();
 
@@ -51,7 +52,7 @@ export const sendMessage = createSafeAction(
     if (!user) throw new Error("Unauthorized");
 
     const trimmedContent = content.trim();
-    if (!trimmedContent) throw new Error("Message cannot be empty");
+    if (!trimmedContent && !fileUrl) throw new Error("Message cannot be empty");
 
     let finalConversationId = conversationId;
 
@@ -91,8 +92,9 @@ export const sendMessage = createSafeAction(
       .insert({
         conversation_id: finalConversationId,
         sender_id: user.id,
-        content: trimmedContent,
+        content: trimmedContent || null,
         type,
+        file_url: fileUrl || null,
       })
       .select("id")
       .single();

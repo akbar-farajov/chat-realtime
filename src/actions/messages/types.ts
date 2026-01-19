@@ -14,6 +14,7 @@ export interface SendMessageParams {
   targetUserId?: string;
   content: string;
   type?: "text" | "image" | "video" | "audio";
+  fileUrl?: string;
 }
 
 export interface SendMessageResult {
