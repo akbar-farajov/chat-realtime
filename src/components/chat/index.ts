@@ -4,4 +4,10 @@ export { ChatHeader } from "./chat-header";
 export { ChatInput } from "./chat-input";
 export { ChatMessage } from "./chat-message";
 export { ChatMessageList } from "./chat-message-list";
+export {
+  ChatAreaSkeleton,
+  ChatHeaderSkeleton,
+  ChatInputSkeleton,
+  ChatMessagesSkeleton,
+} from "./chat-skeleton";
 export { ImageModal } from "./image-modal";

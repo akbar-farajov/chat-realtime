@@ -44,4 +44,6 @@ alwaysApply: true
     - Avoid for data fetching or state management.
   
   Follow Next.js docs for Data Fetching, Rendering, and Routing.
+
+  
   

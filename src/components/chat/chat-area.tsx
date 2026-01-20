@@ -1,7 +1,10 @@
+import { Suspense } from "react";
+
 import { getMessages } from "@/actions/messages";
 import type { UserProfile } from "@/actions/users";
 import { ChatClient } from "./chat-client";
 import { ChatHeader } from "./chat-header";
+import { ChatInputSkeleton, ChatMessagesSkeleton } from "./chat-skeleton";
 
 interface ConversationData {
   id: string;
@@ -20,6 +23,42 @@ interface ChatAreaProps {
   targetProfile?: UserProfile;
 }
 
+async function ChatMessages({
+  conversationId,
+  currentUserId,
+  targetUserId,
+  isNew,
+}: {
+  conversationId?: string;
+  currentUserId: string;
+  targetUserId?: string;
+  isNew?: boolean;
+}) {
+  const messagesResult = conversationId
+    ? await getMessages(conversationId)
+    : null;
+  const initialMessages = messagesResult?.data ?? [];
+
+  return (
+    <ChatClient
+      initialMessages={initialMessages}
+      conversationId={conversationId}
+      currentUserId={currentUserId}
+      targetUserId={targetUserId}
+      isNew={isNew}
+    />
+  );
+}
+
+function ChatMessagesFallback() {
+  return (
+    <>
+      <ChatMessagesSkeleton />
+      <ChatInputSkeleton />
+    </>
+  );
+}
+
 export async function ChatArea({
   conversationId,
   conversation,
@@ -29,11 +68,6 @@ export async function ChatArea({
   targetUserId,
   targetProfile,
 }: ChatAreaProps) {
-  const messagesResult = conversationId
-    ? await getMessages(conversationId)
-    : null;
-  const initialMessages = messagesResult?.data ?? [];
-
   const profile = isNew ? targetProfile : chatPartner;
   const isGroup = conversation?.is_group ?? false;
 
@@ -45,13 +79,14 @@ export async function ChatArea({
         groupName={conversation?.name}
         groupImage={conversation?.group_image}
       />
-      <ChatClient
-        initialMessages={initialMessages}
-        conversationId={conversationId}
-        currentUserId={currentUserId}
-        targetUserId={targetUserId}
-        isNew={isNew}
-      />
+      <Suspense fallback={<ChatMessagesFallback />}>
+        <ChatMessages
+          conversationId={conversationId}
+          currentUserId={currentUserId}
+          targetUserId={targetUserId}
+          isNew={isNew}
+        />
+      </Suspense>
     </div>
   );
 }

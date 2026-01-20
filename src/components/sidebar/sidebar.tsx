@@ -1,4 +1,7 @@
+import { Suspense } from "react";
+
 import { ConversationList } from "@/components/sidebar/conversation-list";
+import { ConversationListSkeleton } from "@/components/sidebar/conversation-list-skeleton";
 import { SearchInput } from "@/components/sidebar/search-input";
 import { SidebarHeader } from "@/components/sidebar/sidebar-header";
 
@@ -21,10 +24,12 @@ export function Sidebar({
       <div className="px-3 pb-3 pt-2">
         <SearchInput />
       </div>
-      <ConversationList
-        userId={userId}
-        activeConversationId={activeConversationId}
-      />
+      <Suspense fallback={<ConversationListSkeleton />}>
+        <ConversationList
+          userId={userId}
+          activeConversationId={activeConversationId}
+        />
+      </Suspense>
     </div>
   );
 }

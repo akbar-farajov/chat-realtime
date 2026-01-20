@@ -33,3 +33,17 @@ alwaysApply: true
 - `actions/` - Server actions for mutations.
 - `hooks/` - Custom React hooks.
 - `types/` - TypeScript interfaces and Supabase generated types.
+# ... (əvvəlki qaydalar qalır)
+
+## Server Actions & Code Quality Rules
+1. **NO Duplication:** Before writing a new function, ALWAYS check existing files in `actions/` folder. If a similar function exists, refactor or extend it instead of creating a new one.
+2. **Safe Action Pattern:** ALL Server Actions must be wrapped in `createSafeAction` (from `@/lib/safe-action`). Never return raw data/errors directly.
+3. **File Organization:** Keep actions grouped by domain:
+   - `actions/auth.ts` -> Login, Signup, Logout
+   - `actions/message.ts` -> Send, Edit, Delete messages
+   - `actions/conversation.ts` -> Create (1:1 & Group), Get Lists
+   - `actions/user.ts` -> Profile, Search, Status
+4. **Readability:** - Use descriptive names (`createGroupConversation` instead of `createGroup`).
+   - Extract complex logic into helper functions inside `lib/`.
+   - Keep action files clean: minimal imports, strict types.
+5. **Type Safety:** Use generated Supabase types (`Database`) for all DB operations.
