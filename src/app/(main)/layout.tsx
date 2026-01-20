@@ -1,5 +1,6 @@
 import { redirect } from "next/navigation";
 
+import { ActiveStatus } from "@/components/active-status";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,6 +40,7 @@ export default async function MainLayout({
 
   return (
     <div className="flex h-svh w-full">
+      <ActiveStatus userId={user.id} />
       <aside className="hidden h-svh w-80 flex-col border-r bg-sidebar md:flex">
         <Sidebar
           userId={user.id}

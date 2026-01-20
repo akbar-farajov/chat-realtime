@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
 
 import type { ConversationListItem } from "@/actions/conversations";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/user-avatar";
 import { cn } from "@/lib/utils";
 
 type ConversationItemProps = {
@@ -14,13 +17,14 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 });
 
-const getInitials = (value: string) =>
-  value
+function getInitials(value: string) {
+  return value
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+}
 
 export function ConversationItem({
   data,
@@ -44,10 +48,19 @@ export function ConversationItem({
         selected ? "bg-sidebar-accent" : "hover:bg-sidebar-accent",
       )}
     >
-      <Avatar className="size-12">
-        <AvatarImage src={data.avatarUrl ?? undefined} alt={data.name} />
-        <AvatarFallback>{getInitials(data.name)}</AvatarFallback>
-      </Avatar>
+      {data.isGroup ? (
+        <Avatar className="size-12">
+          <AvatarImage src={data.avatarUrl ?? undefined} alt={data.name} />
+          <AvatarFallback>{getInitials(data.name)}</AvatarFallback>
+        </Avatar>
+      ) : (
+        <UserAvatar
+          userId={data.otherUserId}
+          src={data.avatarUrl}
+          name={data.name}
+          className="size-12"
+        />
+      )}
       <div className="min-w-0 flex-1">
         <div className="flex items-center justify-between gap-2">
           <div className="truncate text-sm font-medium">{data.name}</div>

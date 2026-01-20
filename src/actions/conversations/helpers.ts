@@ -59,6 +59,7 @@ export function mapConversationRows(
       lastMessage: resolveLastMessage(conversation),
       lastMessageAt: resolveLastMessageAt(conversation),
       isGroup,
+      otherUserId: isGroup ? null : (otherMember?.id ?? null),
     };
   });
 }

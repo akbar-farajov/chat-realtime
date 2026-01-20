@@ -15,6 +15,7 @@ export interface ConversationListItem {
     | Database["public"]["Tables"]["messages"]["Row"]["created_at"]
     | Database["public"]["Tables"]["conversations"]["Row"]["last_message_at"];
   isGroup: Database["public"]["Tables"]["conversations"]["Row"]["is_group"];
+  otherUserId: string | null;
 }
 
 export type ConversationQueryRow = Pick<

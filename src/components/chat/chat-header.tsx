@@ -1,5 +1,9 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+"use client";
+
 import type { UserProfile } from "@/actions/users";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/user-avatar";
+import { useActiveList } from "@/hooks/use-active-list";
 
 interface ChatHeaderProps {
   profile: UserProfile | null;
@@ -8,13 +12,14 @@ interface ChatHeaderProps {
   groupImage?: string | null;
 }
 
-const getInitials = (value: string) =>
-  value
+function getInitials(value: string) {
+  return value
     .split(" ")
     .filter(Boolean)
     .slice(0, 2)
     .map((part) => part[0]?.toUpperCase())
     .join("");
+}
 
 export function ChatHeader({
   profile,
@@ -22,24 +27,35 @@ export function ChatHeader({
   groupName,
   groupImage,
 }: ChatHeaderProps) {
-  const displayName = isGroup
-    ? groupName ?? "Group"
-    : profile?.fullName ?? profile?.username ?? "Unknown";
+  const { members } = useActiveList();
 
-  const avatarUrl = isGroup ? groupImage : profile?.avatarUrl;
-  const status = !isGroup ? profile?.status : null;
+  const displayName = isGroup
+    ? (groupName ?? "Group")
+    : (profile?.fullName ?? profile?.username ?? "Unknown");
+
+  const isOnline = profile?.id ? members.includes(profile.id) : false;
 
   return (
     <header className="flex items-center gap-3 border-b px-4 py-3">
-      <Avatar className="size-10">
-        <AvatarImage src={avatarUrl ?? undefined} alt={displayName} />
-        <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
-      </Avatar>
+      {isGroup ? (
+        <Avatar className="size-10">
+          <AvatarImage src={groupImage ?? undefined} alt={displayName} />
+          <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
+        </Avatar>
+      ) : (
+        <UserAvatar
+          userId={profile?.id}
+          src={profile?.avatarUrl}
+          name={displayName}
+        />
+      )}
       <div className="min-w-0 flex-1">
         <div className="truncate text-sm font-medium">{displayName}</div>
-        {status && (
-          <div className="text-xs text-muted-foreground capitalize">
-            {status}
+        {!isGroup && (
+          <div
+            className={`text-xs ${isOnline ? "text-green-500" : "text-muted-foreground"}`}
+          >
+            {isOnline ? "Online" : "Offline"}
           </div>
         )}
       </div>
