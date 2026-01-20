@@ -60,6 +60,7 @@ export function useRealtimeConversations(
         lastMessage: lastMessage ?? result.data.lastMessage,
         lastMessageAt: lastMessageAt ?? result.data.lastMessageAt,
         isGroup: result.data.isGroup,
+        otherUserId: result.data.otherUserId,
       };
 
       conversationIdsRef.current.add(conversationId);
