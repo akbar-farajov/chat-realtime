@@ -95,7 +95,10 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="px-4 pb-3">
+    <form
+      onSubmit={handleSubmit}
+      className="sticky bottom-0 z-10 bg-background/95 px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] pt-2 backdrop-blur md:static md:bg-transparent md:pb-3 md:pt-0"
+    >
       {selectedImages.length > 0 && (
         <div className="mb-2 flex flex-wrap gap-2 rounded-lg bg-input/50 p-2">
           {selectedImages.map((image) => (

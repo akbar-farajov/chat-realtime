@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { ActiveStatus } from "@/components/active-status";
+import { MainShell } from "@/components/layout/main-shell";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { createClient } from "@/lib/supabase/server";
 
@@ -39,18 +39,17 @@ export default async function MainLayout({
     null;
 
   return (
-    <div className="flex h-svh w-full">
-      <ActiveStatus userId={user.id} />
-      <aside className="hidden h-svh w-80 flex-col border-r bg-sidebar md:flex">
+    <MainShell
+      userId={user.id}
+      sidebar={
         <Sidebar
           userId={user.id}
           userName={userName}
           userAvatarUrl={userAvatarUrl}
         />
-      </aside>
-      <main className="flex min-w-0 flex-1 flex-col bg-background">
-        {children}
-      </main>
-    </div>
+      }
+    >
+      {children}
+    </MainShell>
   );
 }

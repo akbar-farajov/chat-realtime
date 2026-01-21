@@ -1,3 +1,4 @@
+import { CheckCheck } from "lucide-react";
 import Image from "next/image";
 
 import type { Message } from "@/actions/messages";
@@ -18,11 +19,12 @@ function MessageTime({ time, isOwn }: { time: string; isOwn: boolean }) {
   return (
     <span
       className={cn(
-        "text-[10px]",
+        "inline-flex items-center gap-1 text-[10px]",
         isOwn ? "text-primary-foreground/70" : "text-muted-foreground",
       )}
     >
       {time}
+      {isOwn && <CheckCheck className="size-3 text-primary-foreground/70" />}
     </span>
   );
 }
