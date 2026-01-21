@@ -1,4 +1,4 @@
-import { CheckCheck } from "lucide-react";
+import { Check, CheckCheck } from "lucide-react";
 import Image from "next/image";
 
 import type { Message } from "@/actions/messages";
@@ -8,6 +8,8 @@ import { cn } from "@/lib/utils";
 interface ChatMessageProps {
   message: Message;
   isOwn: boolean;
+  isPartnerOnline: boolean;
+  showStatus: boolean;
 }
 
 const timeFormatter = new Intl.DateTimeFormat("en-US", {
@@ -15,7 +17,37 @@ const timeFormatter = new Intl.DateTimeFormat("en-US", {
   minute: "2-digit",
 });
 
-function MessageTime({ time, isOwn }: { time: string; isOwn: boolean }) {
+function StatusIcon({
+  status,
+  isPartnerOnline,
+}: {
+  status: Message["status"];
+  isPartnerOnline: boolean;
+}) {
+  if (status === "read") {
+    return <CheckCheck className="size-4 text-blue-300" />;
+  }
+
+  if (isPartnerOnline) {
+    return <CheckCheck className="size-4 text-primary-foreground/60" />;
+  }
+
+  return <Check className="size-4 text-primary-foreground/60" />;
+}
+
+function MessageTime({
+  time,
+  isOwn,
+  showStatus,
+  status,
+  isPartnerOnline,
+}: {
+  time: string;
+  isOwn: boolean;
+  showStatus: boolean;
+  status: Message["status"];
+  isPartnerOnline: boolean;
+}) {
   return (
     <span
       className={cn(
@@ -24,7 +56,9 @@ function MessageTime({ time, isOwn }: { time: string; isOwn: boolean }) {
       )}
     >
       {time}
-      {isOwn && <CheckCheck className="size-3 text-primary-foreground/70" />}
+      {isOwn && showStatus && (
+        <StatusIcon status={status} isPartnerOnline={isPartnerOnline} />
+      )}
     </span>
   );
 }
@@ -33,10 +67,14 @@ function ImageMessage({
   message,
   isOwn,
   time,
+  showStatus,
+  isPartnerOnline,
 }: {
   message: Message;
   isOwn: boolean;
   time: string;
+  showStatus: boolean;
+  isPartnerOnline: boolean;
 }) {
   if (!message.fileUrl) return null;
 
@@ -57,7 +95,13 @@ function ImageMessage({
           </p>
         )}
         <div className="px-3 pb-2 text-right">
-          <MessageTime time={time} isOwn={isOwn} />
+          <MessageTime
+            time={time}
+            isOwn={isOwn}
+            showStatus={showStatus}
+            status={message.status}
+            isPartnerOnline={isPartnerOnline}
+          />
         </div>
       </button>
     </ImageModal>
@@ -68,10 +112,14 @@ function TextMessage({
   message,
   isOwn,
   time,
+  showStatus,
+  isPartnerOnline,
 }: {
   message: Message;
   isOwn: boolean;
   time: string;
+  showStatus: boolean;
+  isPartnerOnline: boolean;
 }) {
   return (
     <div className="px-3 py-2">
@@ -79,13 +127,24 @@ function TextMessage({
         {message.content}
       </p>
       <div className="mt-1 text-right">
-        <MessageTime time={time} isOwn={isOwn} />
+        <MessageTime
+          time={time}
+          isOwn={isOwn}
+          showStatus={showStatus}
+          status={message.status}
+          isPartnerOnline={isPartnerOnline}
+        />
       </div>
     </div>
   );
 }
 
-export function ChatMessage({ message, isOwn }: ChatMessageProps) {
+export function ChatMessage({
+  message,
+  isOwn,
+  showStatus,
+  isPartnerOnline,
+}: ChatMessageProps) {
   const time = message.createdAt
     ? timeFormatter.format(new Date(message.createdAt))
     : "";
@@ -103,9 +162,21 @@ export function ChatMessage({ message, isOwn }: ChatMessageProps) {
         )}
       >
         {isImage ? (
-          <ImageMessage message={message} isOwn={isOwn} time={time} />
+          <ImageMessage
+            message={message}
+            isOwn={isOwn}
+            time={time}
+            showStatus={showStatus}
+            isPartnerOnline={isPartnerOnline}
+          />
         ) : (
-          <TextMessage message={message} isOwn={isOwn} time={time} />
+          <TextMessage
+            message={message}
+            isOwn={isOwn}
+            time={time}
+            showStatus={showStatus}
+            isPartnerOnline={isPartnerOnline}
+          />
         )}
       </div>
     </div>

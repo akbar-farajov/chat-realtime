@@ -7,7 +7,10 @@ export interface Message {
   fileUrl: string | null;
   createdAt: string | null;
   isEdited: boolean | null;
+  status: MessageStatus;
 }
+
+export type MessageStatus = string;
 
 export interface SendMessageParams {
   conversationId?: string;
@@ -20,4 +23,8 @@ export interface SendMessageParams {
 export interface SendMessageResult {
   conversationId: string;
   messageId: string;
+}
+
+export interface MarkMessagesReadResult {
+  updatedCount: number;
 }

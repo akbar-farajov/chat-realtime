@@ -4,11 +4,14 @@ import type { RefObject } from "react";
 
 import type { Message } from "@/actions/messages";
 import { ChatMessage } from "@/components/chat/chat-message";
+import { useActiveList } from "@/hooks/use-active-list";
 
 interface ChatMessageListProps {
   messages: Message[];
   currentUserId: string;
   containerRef: RefObject<HTMLDivElement | null>;
+  partnerId?: string;
+  showStatus?: boolean;
 }
 
 const dateFormatter = new Intl.DateTimeFormat("en-US", {
@@ -72,7 +75,13 @@ export function ChatMessageList({
   messages,
   currentUserId,
   containerRef,
+  partnerId,
+  showStatus = true,
 }: ChatMessageListProps) {
+  const { members } = useActiveList();
+  const isPartnerOnline = partnerId ? members.includes(partnerId) : false;
+  const shouldShowStatus = showStatus && Boolean(partnerId);
+
   if (messages.length === 0) {
     return <EmptyState />;
   }
@@ -94,6 +103,8 @@ export function ChatMessageList({
                   key={message.id}
                   message={message}
                   isOwn={message.senderId === currentUserId}
+                  isPartnerOnline={isPartnerOnline}
+                  showStatus={shouldShowStatus}
                 />
               ))}
             </div>

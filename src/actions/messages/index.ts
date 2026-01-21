@@ -1,2 +1,8 @@
-export { getMessages, sendMessage } from "./action";
-export type { Message, SendMessageParams, SendMessageResult } from "./types";
+export { getMessages, markMessagesRead, sendMessage } from "./action";
+export type {
+  MarkMessagesReadResult,
+  Message,
+  MessageStatus,
+  SendMessageParams,
+  SendMessageResult,
+} from "./types";

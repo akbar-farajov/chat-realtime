@@ -109,6 +109,7 @@ export type Database = {
           id: string;
           is_edited: boolean | null;
           sender_id: string;
+          status: string;
           type: string | null;
         };
         Insert: {
@@ -119,6 +120,7 @@ export type Database = {
           id?: string;
           is_edited?: boolean | null;
           sender_id: string;
+          status?: string;
           type?: string | null;
         };
         Update: {
@@ -129,6 +131,7 @@ export type Database = {
           id?: string;
           is_edited?: boolean | null;
           sender_id?: string;
+          status?: string;
           type?: string | null;
         };
         Relationships: [
@@ -180,7 +183,18 @@ export type Database = {
       [_ in never]: never;
     };
     Functions: {
-      [_ in never]: never;
+      is_conversation_admin: {
+        Args: { target_conversation_id: string };
+        Returns: boolean;
+      };
+      is_conversation_member: {
+        Args: { target_conversation_id: string };
+        Returns: boolean;
+      };
+      mark_messages_read: {
+        Args: { p_conversation_id: string };
+        Returns: number;
+      };
     };
     Enums: {
       [_ in never]: never;

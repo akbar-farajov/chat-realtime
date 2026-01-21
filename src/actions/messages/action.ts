@@ -8,7 +8,12 @@ import {
 } from "@/actions/conversations";
 import { createSafeAction } from "@/lib/safe-action";
 import { createClient } from "@/lib/supabase/server";
-import type { Message, SendMessageParams, SendMessageResult } from "./types";
+import type {
+  MarkMessagesReadResult,
+  Message,
+  SendMessageParams,
+  SendMessageResult,
+} from "./types";
 
 export const getMessages = createSafeAction(
   async (conversationId: string): Promise<Message[]> => {
@@ -31,6 +36,7 @@ export const getMessages = createSafeAction(
       fileUrl: msg.file_url,
       createdAt: msg.created_at,
       isEdited: msg.is_edited,
+      status: msg.status ?? "sent",
     }));
   },
 );
@@ -113,5 +119,19 @@ export const sendMessage = createSafeAction(
       conversationId: finalConversationId,
       messageId: message.id,
     };
+  },
+);
+
+export const markMessagesRead = createSafeAction(
+  async (conversationId: string): Promise<MarkMessagesReadResult> => {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase.rpc("mark_messages_read", {
+      p_conversation_id: conversationId,
+    });
+
+    if (error) throw new Error(error.message);
+
+    return { updatedCount: data ?? 0 };
   },
 );

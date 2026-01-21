@@ -28,11 +28,15 @@ async function ChatMessages({
   currentUserId,
   targetUserId,
   isNew,
+  partnerId,
+  isGroup,
 }: {
   conversationId?: string;
   currentUserId: string;
   targetUserId?: string;
   isNew?: boolean;
+  partnerId?: string;
+  isGroup?: boolean;
 }) {
   const messagesResult = conversationId
     ? await getMessages(conversationId)
@@ -46,6 +50,8 @@ async function ChatMessages({
       currentUserId={currentUserId}
       targetUserId={targetUserId}
       isNew={isNew}
+      partnerId={partnerId}
+      isGroup={isGroup}
     />
   );
 }
@@ -70,6 +76,7 @@ export async function ChatArea({
 }: ChatAreaProps) {
   const profile = isNew ? targetProfile : chatPartner;
   const isGroup = conversation?.is_group ?? false;
+  const partnerId = isNew ? targetUserId : chatPartner?.id;
 
   return (
     <div className="flex h-full flex-col">
@@ -85,6 +92,8 @@ export async function ChatArea({
           currentUserId={currentUserId}
           targetUserId={targetUserId}
           isNew={isNew}
+          partnerId={partnerId}
+          isGroup={isGroup}
         />
       </Suspense>
     </div>

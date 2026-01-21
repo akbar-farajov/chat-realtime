@@ -1,15 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
-import type { Message } from "@/actions/messages";
-import { sendMessage } from "@/actions/messages";
+import type { Message, MessageStatus } from "@/actions/messages";
+import { markMessagesRead, sendMessage } from "@/actions/messages";
 import { ChatInput } from "@/components/chat/chat-input";
 import { ChatMessageList } from "@/components/chat/chat-message-list";
 import { useChatScroll } from "@/hooks/use-chat-scroll";
-import { useRealtimeBroadcast } from "@/hooks/use-realtime-subscription";
-import { createClient } from "@/lib/supabase/client";
+import { useRealtimeInbox } from "@/hooks/use-realtime-inbox";
+import { useRealtimeMessages } from "@/hooks/use-realtime-messages";
 
 interface ChatClientProps {
   initialMessages: Message[];
@@ -17,31 +17,8 @@ interface ChatClientProps {
   currentUserId: string;
   targetUserId?: string;
   isNew?: boolean;
-}
-
-interface NewConversationEvent {
-  conversationId: string;
-  lastMessage: string | null;
-  lastMessageAt: string | null;
-}
-
-async function notifyTargetUser(
-  targetUserId: string,
-  event: NewConversationEvent,
-) {
-  const supabase = createClient();
-  const channel = supabase.channel(`user:${targetUserId}:inbox`);
-
-  await channel.subscribe((status) => {
-    if (status === "SUBSCRIBED") {
-      channel.send({
-        type: "broadcast",
-        event: "new-conversation",
-        payload: event,
-      });
-      setTimeout(() => supabase.removeChannel(channel), 1000);
-    }
-  });
+  partnerId?: string;
+  isGroup?: boolean;
 }
 
 export function ChatClient({
@@ -50,6 +27,8 @@ export function ChatClient({
   currentUserId,
   targetUserId,
   isNew,
+  partnerId,
+  isGroup,
 }: ChatClientProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -57,6 +36,8 @@ export function ChatClient({
   const [currentConversationId, setCurrentConversationId] =
     useState(conversationId);
   const { containerRef } = useChatScroll(messages);
+  const readInFlightRef = useRef(false);
+  const { broadcastToInbox } = useRealtimeInbox();
 
   const handleNewMessage = useCallback(
     (message: Message) => {
@@ -69,12 +50,56 @@ export function ChatClient({
     [currentUserId],
   );
 
-  const { broadcast } = useRealtimeBroadcast<Message>({
-    channelName: `conversation:${currentConversationId}`,
-    eventName: "new-message",
+  const handleStatusUpdate = useCallback(
+    (messageId: string, status: MessageStatus) => {
+      setMessages((prev) =>
+        prev.map((message) =>
+          message.id === messageId ? { ...message, status } : message,
+        ),
+      );
+    },
+    [],
+  );
+
+  const { broadcastMessage } = useRealtimeMessages({
+    conversationId: currentConversationId,
     onMessage: handleNewMessage,
+    onStatusUpdate: handleStatusUpdate,
     enabled: Boolean(currentConversationId),
   });
+
+  useEffect(() => {
+    if (!currentConversationId) return;
+    if (isGroup) return;
+    if (readInFlightRef.current) return;
+
+    const unreadIds = messages
+      .filter(
+        (message) =>
+          message.senderId !== currentUserId && message.status !== "read",
+      )
+      .map((message) => message.id);
+
+    if (unreadIds.length === 0) return;
+
+    readInFlightRef.current = true;
+
+    markMessagesRead(currentConversationId)
+      .then((result) => {
+        if (!result.success) return;
+
+        setMessages((prev) =>
+          prev.map((message) =>
+            unreadIds.includes(message.id)
+              ? { ...message, status: "read" }
+              : message,
+          ),
+        );
+      })
+      .finally(() => {
+        readInFlightRef.current = false;
+      });
+  }, [messages, currentConversationId, currentUserId, isGroup]);
 
   const handleSendMessage = async (
     content: string,
@@ -92,6 +117,7 @@ export function ChatClient({
       fileUrl: fileUrl || null,
       createdAt,
       isEdited: false,
+      status: "sent",
     };
 
     setMessages((prev) => [...prev, optimisticMessage]);
@@ -114,6 +140,7 @@ export function ChatClient({
           ...optimisticMessage,
           id: result.data.messageId,
           conversationId: finalConversationId,
+          status: "sent",
         };
 
         setMessages((prev) =>
@@ -125,15 +152,19 @@ export function ChatClient({
           router.replace(`/conversations/${finalConversationId}`);
 
           if (targetUserId) {
-            notifyTargetUser(targetUserId, {
-              conversationId: finalConversationId,
-              lastMessage: type === "image" ? "📷 Image" : content,
-              lastMessageAt: createdAt,
+            broadcastToInbox({
+              userId: targetUserId,
+              event: "new-conversation",
+              payload: {
+                conversationId: finalConversationId,
+                lastMessage: type === "image" ? "📷 Image" : content,
+                lastMessageAt: createdAt,
+              },
             });
           }
         }
 
-        broadcast(finalMessage);
+        broadcastMessage(finalMessage);
       }
     });
   };
@@ -144,6 +175,8 @@ export function ChatClient({
         messages={messages}
         currentUserId={currentUserId}
         containerRef={containerRef}
+        partnerId={partnerId ?? targetUserId}
+        showStatus={!isGroup}
       />
       <ChatInput onSendMessage={handleSendMessage} disabled={isPending} />
     </>
