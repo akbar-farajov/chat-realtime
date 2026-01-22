@@ -1,5 +1,6 @@
 export {
   createConversation,
+  ensureDirectConversation,
   getConversationById,
   getConversations,
   getDirectConversation,

@@ -138,6 +138,37 @@ export const createConversation = createSafeAction(
   },
 );
 
+export const ensureDirectConversation = createSafeAction(
+  async (
+    otherUserId: string,
+  ): Promise<{ id: string; isNew: boolean }> => {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+    if (user.id === otherUserId) {
+      throw new Error("Cannot start a conversation with yourself");
+    }
+
+    const existingId = await getDirectConversation(user.id, otherUserId);
+    if (existingId) return { id: existingId, isNew: false };
+
+    const result = await createConversation({
+      memberIds: [user.id, otherUserId],
+      creatorId: user.id,
+    });
+
+    if (!result.success || !result.data) {
+      throw new Error(result.error ?? "Failed to create conversation");
+    }
+
+    return { id: result.data.id, isNew: true };
+  },
+);
+
 export const getExistingConversationId = createSafeAction(
   async (otherUserId: string): Promise<string | null> => {
     const supabase = await createClient();

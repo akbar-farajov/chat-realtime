@@ -27,17 +27,36 @@ export const getMessages = createSafeAction(
 
     if (error) throw new Error(error.message);
 
-    return (data ?? []).map((msg) => ({
-      id: msg.id,
-      conversationId: msg.conversation_id,
-      senderId: msg.sender_id,
-      content: msg.content,
-      type: msg.type,
-      fileUrl: msg.file_url,
-      createdAt: msg.created_at,
-      isEdited: msg.is_edited,
-      status: msg.status ?? "sent",
-    }));
+    const SIGNED_URL_TTL = 60 * 60;
+    const rows = data ?? [];
+
+    const messages = await Promise.all(
+      rows.map(async (msg) => {
+        let fileUrl: string | null = null;
+
+        if (msg.file_url) {
+          const { data: signedData } = await supabase.storage
+            .from("attachments")
+            .createSignedUrl(msg.file_url, SIGNED_URL_TTL);
+
+          fileUrl = signedData?.signedUrl ?? null;
+        }
+
+        return {
+          id: msg.id,
+          conversationId: msg.conversation_id,
+          senderId: msg.sender_id,
+          content: msg.content,
+          type: msg.type,
+          fileUrl,
+          createdAt: msg.created_at,
+          isEdited: msg.is_edited,
+          status: msg.status ?? "sent",
+        };
+      }),
+    );
+
+    return messages;
   },
 );
 
@@ -47,7 +66,7 @@ export const sendMessage = createSafeAction(
     targetUserId,
     content,
     type = "text",
-    fileUrl,
+    filePath,
   }: SendMessageParams): Promise<SendMessageResult> => {
     const supabase = await createClient();
 
@@ -58,9 +77,10 @@ export const sendMessage = createSafeAction(
     if (!user) throw new Error("Unauthorized");
 
     const trimmedContent = content.trim();
-    if (!trimmedContent && !fileUrl) throw new Error("Message cannot be empty");
+    if (!trimmedContent && !filePath) throw new Error("Message cannot be empty");
 
     let finalConversationId = conversationId;
+    let createdConversation = false;
 
     if (!conversationId || conversationId === "new") {
       if (!targetUserId) {
@@ -86,6 +106,7 @@ export const sendMessage = createSafeAction(
         }
 
         finalConversationId = result.data.id;
+        createdConversation = true;
       }
     }
 
@@ -100,7 +121,7 @@ export const sendMessage = createSafeAction(
         sender_id: user.id,
         content: trimmedContent || null,
         type,
-        file_url: fileUrl || null,
+        file_url: filePath || null,
       })
       .select("id")
       .single();
@@ -118,6 +139,7 @@ export const sendMessage = createSafeAction(
     return {
       conversationId: finalConversationId,
       messageId: message.id,
+      createdConversation,
     };
   },
 );

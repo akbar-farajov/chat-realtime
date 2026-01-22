@@ -15,15 +15,24 @@ interface SelectedImage {
 }
 
 interface ChatInputProps {
-  onSendMessage: (
-    content: string,
-    type: "text" | "image",
-    fileUrl?: string,
-  ) => Promise<void>;
+  onSendMessage: (payload: {
+    content: string;
+    type: "text" | "image";
+    filePath?: string;
+    fileUrl?: string;
+    conversationId?: string;
+  }) => Promise<void>;
+  conversationId?: string;
+  ensureConversationId?: () => Promise<string | null>;
   disabled?: boolean;
 }
 
-export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
+export function ChatInput({
+  onSendMessage,
+  conversationId,
+  ensureConversationId,
+  disabled = false,
+}: ChatInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [inputValue, setInputValue] = useState("");
@@ -79,14 +88,35 @@ export function ChatInput({ onSendMessage, disabled = false }: ChatInputProps) {
     setSelectedImages([]);
     setIsUploading(true);
 
+    let resolvedConversationId = conversationId;
+
+    if (!resolvedConversationId && imagesToSend.length > 0) {
+      resolvedConversationId = await ensureConversationId?.();
+    }
+
     if (content) {
-      await onSendMessage(content, "text");
+      await onSendMessage({
+        content,
+        type: "text",
+        conversationId: resolvedConversationId ?? undefined,
+      });
     }
 
     for (const image of imagesToSend) {
-      const fileUrl = await uploadFile(image.file);
-      if (fileUrl) {
-        await onSendMessage("", "image", fileUrl);
+      if (!resolvedConversationId) {
+        URL.revokeObjectURL(image.previewUrl);
+        continue;
+      }
+
+      const uploadResult = await uploadFile(image.file, resolvedConversationId);
+      if (uploadResult) {
+        await onSendMessage({
+          content: "",
+          type: "image",
+          filePath: uploadResult.filePath,
+          fileUrl: uploadResult.signedUrl,
+          conversationId: resolvedConversationId,
+        });
       }
       URL.revokeObjectURL(image.previewUrl);
     }

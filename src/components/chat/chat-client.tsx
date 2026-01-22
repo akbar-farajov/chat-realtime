@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 
+import { ensureDirectConversation } from "@/actions/conversations";
 import type { Message, MessageStatus } from "@/actions/messages";
 import { markMessagesRead, sendMessage } from "@/actions/messages";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -21,6 +22,14 @@ interface ChatClientProps {
   isGroup?: boolean;
 }
 
+interface SendMessagePayload {
+  content: string;
+  type?: "text" | "image" | "video" | "audio";
+  filePath?: string;
+  fileUrl?: string;
+  conversationId?: string;
+}
+
 export function ChatClient({
   initialMessages,
   conversationId,
@@ -37,6 +46,7 @@ export function ChatClient({
     useState(conversationId);
   const { containerRef } = useChatScroll(messages);
   const readInFlightRef = useRef(false);
+  const createdConversationRef = useRef(false);
   const { broadcastToInbox } = useRealtimeInbox();
 
   const handleNewMessage = useCallback(
@@ -67,6 +77,19 @@ export function ChatClient({
     onStatusUpdate: handleStatusUpdate,
     enabled: Boolean(currentConversationId),
   });
+
+  const ensureConversationId = useCallback(async () => {
+    if (currentConversationId) return currentConversationId;
+    if (!isNew || !targetUserId) return null;
+
+    const result = await ensureDirectConversation(targetUserId);
+    if (!result.success || !result.data) return null;
+
+    createdConversationRef.current = result.data.isNew;
+    setCurrentConversationId(result.data.id);
+    router.replace(`/conversations/${result.data.id}`);
+    return result.data.id;
+  }, [currentConversationId, isNew, router, targetUserId]);
 
   useEffect(() => {
     if (!currentConversationId) return;
@@ -101,20 +124,28 @@ export function ChatClient({
       });
   }, [messages, currentConversationId, currentUserId, isGroup]);
 
-  const handleSendMessage = async (
-    content: string,
-    type: "text" | "image" = "text",
-    fileUrl?: string,
-  ) => {
+  const handleSendMessage = async ({
+    content,
+    type = "text",
+    filePath,
+    fileUrl,
+    conversationId: conversationIdOverride,
+  }: SendMessagePayload) => {
+    if (conversationIdOverride && !currentConversationId) {
+      setCurrentConversationId(conversationIdOverride);
+    }
+
     const createdAt = new Date().toISOString();
+    const resolvedConversationId =
+      conversationIdOverride ?? currentConversationId ?? "";
 
     const optimisticMessage: Message = {
       id: crypto.randomUUID(),
-      conversationId: currentConversationId ?? "",
+      conversationId: resolvedConversationId,
       senderId: currentUserId,
       content: content || null,
       type,
-      fileUrl: fileUrl || null,
+      fileUrl: fileUrl ?? null,
       createdAt,
       isEdited: false,
       status: "sent",
@@ -123,17 +154,20 @@ export function ChatClient({
     setMessages((prev) => [...prev, optimisticMessage]);
 
     startTransition(async () => {
+      const shouldCreateConversation = isNew && !resolvedConversationId;
       const result = await sendMessage({
-        conversationId: isNew ? undefined : currentConversationId,
-        targetUserId: isNew ? targetUserId : undefined,
+        conversationId: shouldCreateConversation
+          ? undefined
+          : resolvedConversationId,
+        targetUserId: shouldCreateConversation ? targetUserId : undefined,
         content,
         type,
-        fileUrl,
+        filePath,
       });
 
       if (result.success && result.data) {
         const finalConversationId = result.data.conversationId;
-        const wasNewConversation =
+        const shouldNavigate =
           isNew && finalConversationId !== currentConversationId;
 
         const finalMessage: Message = {
@@ -147,23 +181,27 @@ export function ChatClient({
           prev.map((m) => (m.id === optimisticMessage.id ? finalMessage : m)),
         );
 
-        if (wasNewConversation) {
+        if (shouldNavigate) {
           setCurrentConversationId(finalConversationId);
           router.replace(`/conversations/${finalConversationId}`);
-
-          if (targetUserId) {
-            broadcastToInbox({
-              userId: targetUserId,
-              event: "new-conversation",
-              payload: {
-                conversationId: finalConversationId,
-                lastMessage: type === "image" ? "📷 Image" : content,
-                lastMessageAt: createdAt,
-              },
-            });
-          }
         }
 
+        const shouldBroadcastNewConversation =
+          createdConversationRef.current || result.data.createdConversation;
+
+        if (shouldBroadcastNewConversation && targetUserId) {
+          broadcastToInbox({
+            userId: targetUserId,
+            event: "new-conversation",
+            payload: {
+              conversationId: finalConversationId,
+              lastMessage: type === "image" ? "📷 Image" : content,
+              lastMessageAt: createdAt,
+            },
+          });
+        }
+
+        createdConversationRef.current = false;
         broadcastMessage(finalMessage);
       }
     });
@@ -178,7 +216,12 @@ export function ChatClient({
         partnerId={partnerId ?? targetUserId}
         showStatus={!isGroup}
       />
-      <ChatInput onSendMessage={handleSendMessage} disabled={isPending} />
+      <ChatInput
+        onSendMessage={handleSendMessage}
+        conversationId={currentConversationId}
+        ensureConversationId={ensureConversationId}
+        disabled={isPending}
+      />
     </>
   );
 }

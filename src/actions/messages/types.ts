@@ -17,12 +17,13 @@ export interface SendMessageParams {
   targetUserId?: string;
   content: string;
   type?: "text" | "image" | "video" | "audio";
-  fileUrl?: string;
+  filePath?: string;
 }
 
 export interface SendMessageResult {
   conversationId: string;
   messageId: string;
+  createdConversation: boolean;
 }
 
 export interface MarkMessagesReadResult {
