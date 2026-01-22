@@ -25,14 +25,14 @@ function StatusIcon({
   isPartnerOnline: boolean;
 }) {
   if (status === "read") {
-    return <CheckCheck className="size-4 text-blue-300" />;
+    return <CheckCheck className="size-5 text-blue-300" />;
   }
 
   if (isPartnerOnline) {
-    return <CheckCheck className="size-4 text-primary-foreground/60" />;
+    return <CheckCheck className="size-5 text-primary-foreground/60" />;
   }
 
-  return <Check className="size-4 text-primary-foreground/60" />;
+  return <Check className="size-5 text-primary-foreground/60" />;
 }
 
 function MessageTime({
@@ -51,8 +51,8 @@ function MessageTime({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-[10px]",
-        isOwn ? "text-primary-foreground/70" : "text-muted-foreground",
+        "inline-flex items-center gap-1 text-xs",
+        isOwn ? "text-white" : "text-muted",
       )}
     >
       {time}
@@ -80,7 +80,7 @@ function ImageMessage({
 
   return (
     <ImageModal src={message.fileUrl}>
-      <button type="button" className="block text-left">
+      <button type="button" className="block text-left relative">
         <Image
           src={message.fileUrl}
           alt="Attachment"
@@ -94,7 +94,7 @@ function ImageMessage({
             {message.content}
           </p>
         )}
-        <div className="px-3 pb-2 text-right">
+        <div className="absolute bottom-0 right-0 z-10">
           <MessageTime
             time={time}
             isOwn={isOwn}
@@ -122,11 +122,11 @@ function TextMessage({
   isPartnerOnline: boolean;
 }) {
   return (
-    <div className="px-3 py-2">
-      <p className="whitespace-pre-wrap text-sm text-wrap-break-word">
+    <div className="px-3 pt-1 flex gap-1">
+      <p className="whitespace-pre-wrap text-sm text-wrap-break-word font-medium">
         {message.content}
       </p>
-      <div className="mt-1 text-right">
+      <div className="text-right pt-1">
         <MessageTime
           time={time}
           isOwn={isOwn}
@@ -157,8 +157,8 @@ export function ChatMessage({
         className={cn(
           "max-w-[70%] overflow-hidden rounded-lg",
           isOwn
-            ? "rounded-br-sm bg-primary text-primary-foreground"
-            : "rounded-bl-sm bg-muted",
+            ? "rounded-br-sm bg-muted"
+            : "rounded-bl-sm bg-primary text-primary-foreground",
         )}
       >
         {isImage ? (
