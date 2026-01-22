@@ -91,7 +91,10 @@ export function ChatInput({
     let resolvedConversationId = conversationId;
 
     if (!resolvedConversationId && imagesToSend.length > 0) {
-      resolvedConversationId = await ensureConversationId?.();
+      const ensuredConversationId = await ensureConversationId?.();
+      if (ensuredConversationId) {
+        resolvedConversationId = ensuredConversationId;
+      }
     }
 
     if (content) {
